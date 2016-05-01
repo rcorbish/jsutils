@@ -1,13 +1,11 @@
 /**
- *
- * makeLiveTable makes a table scroll keeping the headers always visible.
+ * makeLiveTable makes a table scroll keeping the headers always visible. The original table is kept
+ * in place; it may be restyled and may have THEAD & TBODY sections added, if they are missing.
  * 
  * parameters:
  * 		table					  : may be the actual table, its id or a query selector (first matching table)
  * 		height					  : height of the table
  * 		colWidths				  : an iterable containing numbers from which each column width will be taken
- * 		onscrolltotop(tableBody)  : a callback when the body is scrolled to the top of the rows
- * 		onscrollofftop(tableBody) : a callback when the body is scrolled away from the top of the rows
  * 
  * colWidths can be smaller than the # columns, in which case the colWidth will start from index 0 again
  * so to make all columns the same width pass in [ "200px" ], for example.
@@ -25,7 +23,7 @@
  *  
  *	<script>
  * 
- * 		makeLiveTable( "#livetable", "300px", [ "120px", "200px"], function(bdy) {bdy.style.border = "dotted 2px green" ;}, function(bdy) {bdy.style.border = "dotted 2px red" ;} ) ;
+ * 		makeLiveTable( "#livetable", "300px", [ "120px", "200px"] ) ;
  *
  *		function addR() { 
  *			var t = document.querySelector("#livetable") ; 
@@ -65,7 +63,7 @@
  * }
  * </style>
  */
-function makeLiveTable( table, tableHeight, colwidths, onscrolltotop, onscrollofftop ) {
+function makeLiveTable( table, tableHeight, colwidths ) {
 	// allow the actual element or a valid selector to a table
 	if( ! (table instanceof HTMLTableElement) ) {
 		table = document.querySelector( table ) ;
@@ -75,20 +73,6 @@ function makeLiveTable( table, tableHeight, colwidths, onscrolltotop, onscrollof
 	}
 	// Hide the table while we're making a load of style updates (faster)
 	table.style['display'] = 'none' ;
-	
-	// used for when we scroll off the top - we call the callback to notify scroll type
-	var wasOnTop = false ;  
-	// This is the actual scrolling callback for the table body
-	function scrl(tbd) {
-		scrollPos = tbd.scrollTop ;
-		if( scrollPos === 0 && !wasOnTop ) {
-			wasOnTop = true ;
-			onscrolltotop && onscrolltotop( tbd ) ;					
-		} else if( wasOnTop ) {
-			wasOnTop = false ;
-			onscrollofftop && onscrollofftop( tbd ) ;
-		}
-	} ;
 	
 	// Make sure we have a separate THEAD section - if not add it in
 	// if we do add it in - steal the first row into the newly created THEAD
@@ -129,12 +113,6 @@ function makeLiveTable( table, tableHeight, colwidths, onscrolltotop, onscrollof
 		}
 	}
 
-	// This calls the scroll callback (see above). We need that to be able to fire
-	// the events when we are at the top of the table
-	tbody.onscroll=function(e) { scrl(e.target) ; } ;
-	// Call this to set the initial state of the table to 'scrolled to top'
-	scrl(tbody) ;
-	
 	// This utility func will be bound to the table. It should be used to 
 	// add a new row. The data parameter is an iterable of text that will become the 
 	// inner HTML of each cell in the new row.
@@ -176,6 +154,5 @@ function makeLiveTable( table, tableHeight, colwidths, onscrolltotop, onscrollof
 	
 	// we must set the body height to enable scrolling (after all other styles are defined)
 	tbody.style["height"] = (table.offsetHeight - tbody.offsetTop) + "px"; 
-
 }	
 
