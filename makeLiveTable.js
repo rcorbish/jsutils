@@ -10,8 +10,9 @@
  * colWidths can be smaller than the # columns, in which case the colWidth will start from index 0 again
  * so to make all columns the same width pass in [ "200px" ], for example.
  * 
- * A function is bound to the table addRow( iterable ); this adds a new row to 
- * the top of the table rows. The newly added row has a style of newly-added-row
+ * Functions are bound to the table 
+ * 	addRow( iterable ); this adds a new row to the top of the table rows. The newly added row has a style of newly-added-row
+ * 	editRow( tr, iterable ); this edits the data in an existing row. tr may be a tablerow element or a query selector to find one
  * 
  * Suggestion: set the table style to display: none before calling this. That prevents unnecessary redrawing.
  * this function will set the display to block after it's finished
@@ -33,6 +34,7 @@
  *			if ( time[1] < 10 ) time[1] = "0" + time[1];
  *			if ( time[2] < 10 ) time[2] = "0" + time[2];
  *			t.addRow( ['this', 'is a', 'new', 'row', time.join(':') ] ) ; 
+ *			t.editRow( "#livetable tbody tr:nth-child(5)", ['this', 'is a', 'new', 'row', time.join(':') ] ) ; 
  *		}
  *	</script>
  *		
@@ -62,6 +64,7 @@
  * 	   }
  * }
  * </style>
+ * 
  */
 function makeLiveTable( table, tableHeight, colwidths ) {
 	// allow the actual element or a valid selector to a table
@@ -121,8 +124,13 @@ function makeLiveTable( table, tableHeight, colwidths ) {
 	function addRow(data) {
 		var tbody = this.querySelector( "tbody" ) ;
 		var firstRow = tbody.querySelector( "tr" ) ; 
+		var atts = firstRow.attributes ;
+		
 		var tr = document.createElement("tr");
 		tr.className = "newly-added-row" ;
+		for( var i=0 ; i<atts.length ; i++ ) {
+			tr.setAttribute( atts[i].name, atts[i].value );
+		}
 		for( var i=0 ; i<data.length ; i++  ) {
 			var td = document.createElement("td");
 			td.style['min-width'] = colwidths[i % colwidths.length] ;
@@ -132,8 +140,38 @@ function makeLiveTable( table, tableHeight, colwidths ) {
 		}
 		tbody.insertBefore( tr, firstRow ) ;
 	} ; 
-	// Bind the function to the table - so it's a new public method of that table
+	
+	function editRow( tr, data ) {
+		if( ! (tr instanceof HTMLTableRowElement) ) {
+			tr = document.querySelector( tr ) ;
+			if( ! (tr instanceof HTMLTableRowElement)) {
+				throw "Cannot find a valid HTML table row from " + tr ;
+			}
+		}
+		// If we want the cute animation - this is (unfortunately AFAIK) the way to retrigger it
+		// create a copy of the row (make sure it has our lovely style) and then readd it back
+		var newtr = tr.cloneNode(true);
+		var cn = newtr.className ;
+		if( cn.indexOf( "newly-added-row" ) < 0 ) {			
+			newtr.className = cn + " newly-added-row" ; 
+		}		
+		tr.parentNode.replaceChild(newtr, tr);
+		// End If we want cute  
+		
+		var tds = newtr.querySelectorAll( "td" ) ;
+		for( var i=0 ; i<data.length ; i++  ) {
+			var td = tds[i] ;
+			if( !td ) {
+				td = document.createElement("td");
+				newtr.appendChild( td ) ;
+			}
+			td.innerHTML = data[i] ;
+		}
+	} ; 
+	
+	// Bind the functions to the table - now public method of that table
 	table.addRow = addRow.bind( table ) ;
+	table.editRow = editRow.bind( table ) ;
 
 	// Setup all the important custom styles
 	// make sure the THEAD style is valid for no scrolling	
