@@ -16,8 +16,9 @@ parameters:
 colWidths can be smaller than the # columns, in which case the colWidth will start from index 0 again
 so to make all columns the same width pass in [ "200px" ], for example.
  
-A function is bound to the table addRow( iterable ); this adds a new row to 
-the top of the table rows. The newly added row has a style of newly-added-row
+ Functions are bound to the table :
+ * addRow( iterable ); this adds a new row to the top of the table rows. The newly added row has a style of newly-added-row
+ * editRow( tr, iterable ); this edits the data in an existing row. tr may be a tablerow element or a query selector to find one
  
 Suggestion: set the table style to display: none before calling this. That prevents unnecessary redrawing.
 this function will set the display to block after it's finished
@@ -33,22 +34,21 @@ this function will set the display to block after it's finished
       var t = document.querySelector("#livetable") ; 
       var now = new Date();
       var time = [ now.getHours(), now.getMinutes(), now.getSeconds() ];
-  		if ( time[0] < 10 ) time[0] = "0" + time[0];
+      if ( time[0] < 10 ) time[0] = "0" + time[0];
       if ( time[1] < 10 ) time[1] = "0" + time[1];
       if ( time[2] < 10 ) time[2] = "0" + time[2];
       t.addRow( ['this', 'is a', 'new', 'row', time.join(':') ] ) ; 
-		}
+      t.editRow( "#livetable tbody tr:nth-child(5)", ['this', 'is a', 'new', 'row', time.join(':') ] ) ; 
+    }
 
-		var btn = document.getElementById( "addbtn" ) ;
-		btn.onclick = function(e){ 
-			addR(); 
-		}
-	</script>
+    var btn = document.getElementById( "addbtn" ) ;
+    btn.onclick = function(e){ addR(); 	}
+  </script>
   // This is a way to highlight the newly added rows; added by addRow()
  
   <style>		
-	  .newly-added-row { animation: fadein 1.5s ;	}
-	  @keyframes fadein {
+  .newly-added-row { animation: fadein 1.5s ;	}
+  @keyframes fadein {
      from {	background-color: black ; color: white ; }
      to { background-color: transparent ; color: inherit ; }
     }
